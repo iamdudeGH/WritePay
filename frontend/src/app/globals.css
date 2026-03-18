@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --font-sans: 'Space Grotesk', sans-serif;
+}
+
+body {
+  background-color: #000000 !important;
+  color: #ffffff;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.brutalist-shadow {
+    box-shadow: 4px 4px 0px 0px #ff00ff;
+}
+.brutalist-shadow-blue {
+    box-shadow: 4px 4px 0px 0px #00ffff;
+}
+.brutalist-shadow-lime {
+    box-shadow: 4px 4px 0px 0px #ccff00;
+}
+.brutalist-shadow-yellow {
+    box-shadow: 4px 4px 0px 0px #ffff00;
+}
+.brutalist-shadow-white {
+    box-shadow: 6px 6px 0px 0px #ffffff;
+}
+.brutalist-shadow-black {
+    box-shadow: 6px 6px 0px 0px #000000;
+}
+.brutalist-shadow-blue {
+    box-shadow: 6px 6px 0px 0px #00ffff;
+}
+.brutalist-shadow-lime {
+    box-shadow: 6px 6px 0px 0px #ccff00;
+}
+.brutal-border {
+    border: 2px solid #000000;
+}
+.brutal-border-white {
+    border: 2px solid #ffffff;
+}
+.brutal-card {
+    background: #000000;
+    border: 2px solid #ffffff;
+    box-shadow: 6px 6px 0px 0px #ffffff;
+}
+
+/* Fluid Typography for Hero */
+.hero-text {
+    font-size: clamp(4rem, 15vw, 15rem);
+    line-height: 0.9;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Material Symbols scaling */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}

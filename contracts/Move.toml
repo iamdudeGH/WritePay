@@ -1,0 +1,11 @@
+[package]
+name = "WritePay"
+version = "0.1.0"
+
+[addresses]
+WritePay = "0x7f5dffd01dfd9d78c1814e9bced4d70bd2c27470fef0b5930e3f2a3f1207db53"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "main"
+subdir = "aptos-move/framework/aptos-framework"

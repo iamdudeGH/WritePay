@@ -1,37 +1,117 @@
-# WritePay 📖⚡️
+# WritePay ⚡
 
-WritePay is a high-performance decentralized pay-per-read publishing platform built on **Aptos** and **Shelby Protocol**. It empowers creators to monetize high-quality content with sub-second storage latency and secure on-chain revenue sharing.
+**Decentralized pay-per-read publishing platform — Built on [Shelby Protocol](https://shelby.xyz)**
 
-## ✨ Core Features
+## The Problem
 
-- **Decentralized Storage**: Articles are stored as encrypted blobs on Shelby Protocol.
-- **Pay-per-Article**: No monthly subscriptions. Readers pay only for what they want to read.
-- **Creator Autonomy**: Authors receive 90% of revenue instantly on-chain.
-- **On-Chain Profiles**: Persistent user identities and social graph (follows/followers).
-- **End-to-End Encryption**: AES-256-GCM encryption ensures content privacy until purchase.
+Content creators are trapped. Centralized platforms take massive cuts, control distribution, and can de-platform authors overnight. Subscription fatigue means readers won't pay for yet another monthly plan just to read one article.
 
-## 🛠 Tech Stack
+There is no standard way to:
+- Let readers pay **per-article** without subscriptions
+- Store content in a way that **can't be censored or taken down**
+- Give creators **instant, transparent revenue** without middlemen
 
-- **Frontend**: Next.js 16 (React 19, Turbopack, Tailwind CSS 4)
-- **Blockchain**: Aptos (Move Smart Contracts)
-- **Storage**: @ShelbyProtocol (Decentralized high-throughput blob storage)
-- **Wallet**: @Aptos-Labs Wallet Adapter (Petra, Martian, etc.)
+## The Solution
 
-## 📜 Smart Contract Architecture
+WritePay lets authors publish encrypted content to decentralized storage and set their own price. Readers pay directly on-chain — 90% goes to the author instantly, 10% maintains the network. No middlemen, no de-platforming, no subscription walls.
 
-The Move source code for the WritePay platform can be found in the `/contracts` directory. 
-- **Module**: `WritePay::ArticleManagement`
-- **Identity Layer**: Manages on-chain user profiles and usernames.
-- **Social Layer**: Handles the follower/following graph directly on-chain.
-- **Commerce Layer**: Manages content registration, price validation, and automated 90/10 revenue splitting.
+Every article is encrypted with AES-256-GCM, stored on [Shelby Protocol](https://shelby.xyz), and registered on [Aptos](https://aptos.dev) with its price. Payment verification and key release happen automatically.
 
-## 🔒 Security & Privacy
+## How It Works
 
-WritePay uses a hybrid approach to security:
-1. **Content**: Encrypted via AES-256-GCM before being uploaded to Shelby.
-2. **Access Control**: Decryption keys are managed by a server-side KMS and only released upon verification of an Aptos purchase transaction.
-3. **Storage**: Data is distributed across a decentralized network of storage providers with erasure coding (Clay Codes).
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       WRITEPAY DATA FLOW                             │
+│                                                                      │
+│   1. PUBLISH              2. DISCOVER             3. READ            │
+│   ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐│
+│   │ Write article   │     │ Browse the      │     │ Pay on-chain    ││
+│   │ in rich editor  │──▶  │ discovery feed  │──▶  │ (one click)     ││
+│   │                 │     │                 │     │                 ││
+│   │ + AES-256-GCM   │     │ + See title,    │     │ + 90% → Author  ││
+│   │   encryption    │     │   excerpt, price│     │ + 10% → Network ││
+│   │ + Upload to     │     │ + Follow authors│     │ + Decrypt key   ││
+│   │   Shelby        │     │ + Social graph  │     │   released      ││
+│   │ + Register on   │     │                 │     │ + Read in       ││
+│   │   Aptos         │     │                 │     │   browser       ││
+│   └─────────────────┘     └─────────────────┘     └─────────────────┘│
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+## Core Features
+
+### 📖 Publish — Encrypted Content Storage
+Write articles in a rich text editor. Content is encrypted client-side with AES-256-GCM and uploaded to Shelby Protocol. Metadata (title, excerpt, price) is registered on-chain.
+
+### 💰 Commerce — Direct On-Chain Payments
+Readers pay the exact price set by the author. The Aptos smart contract enforces a 90/10 split — 90% to the creator, 10% network maintenance fee. No intermediaries.
+
+### 🔐 Access Control — Server-Side Key Management
+Decryption keys are managed by a server-side KMS. Keys are only released after cryptographic verification of an Aptos purchase transaction.
+
+### 👤 Identity — On-Chain Profiles
+Persistent usernames, bios, and avatars stored directly on the Aptos blockchain. Your identity travels with your wallet.
+
+### 🤝 Social — Follower Graph
+Follow your favorite authors. The social graph lives on-chain via `FollowedEvent` emissions, giving users full ownership of their social connections.
+
+## Architecture
+
+```
+writepay/
+├── frontend/                    # Next.js 16 (React 19, Turbopack)
+│   ├── src/
+│   │   ├── app/                 # Pages + API routes
+│   │   │   ├── api/encryption/  # KMS — key generation & decryption
+│   │   │   ├── read/            # Reader discovery feed
+│   │   │   ├── write/           # Writer dashboard
+│   │   │   └── profile/         # User profile & settings
+│   │   ├── components/          # React components
+│   │   │   ├── ReaderView       # Feed, purchase, decrypt, read
+│   │   │   ├── WriterDashboard  # Rich editor, pricing, publish
+│   │   │   └── ProfileSettings  # Identity, articles, followers
+│   │   └── lib/
+│   │       ├── aptos.ts         # Aptos SDK — publish, purchase, delete
+│   │       └── shelby.ts        # Shelby SDK — upload, download blobs
+│   └── .env.example             # Environment template
+│
+└── contracts/
+    └── sources/
+        └── writepay.move        # Aptos Move smart contract
+```
+
+**Smart Contract Functions:**
+
+| Function | Description |
+|----------|-------------|
+| `publish_article` | Register article on-chain (blob ID, title, price) |
+| `purchase_article` | Pay for article — enforces 90/10 split |
+| `delete_article` | Author-only article removal |
+| `update_profile` | Set username, bio, avatar |
+| `follow_author` | On-chain social follow |
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React 19, Turbopack, Tailwind CSS 4
+- **Blockchain**: Aptos (Move smart contracts)
+- **Storage**: Shelby Protocol (decentralized high-throughput blob storage)
+- **Encryption**: AES-256-GCM (client-side encrypt, server-side KMS)
+- **Wallet**: Aptos Wallet Adapter (Petra, Martian, etc.)
+
+## Security
+
+| Layer | Mechanism |
+|-------|-----------|
+| Content encryption | AES-256-GCM — encrypted before upload |
+| Key management | Server-side KMS — keys never exposed to client |
+| Access control | On-chain purchase verification before key release |
+| Storage | Shelby erasure coding (10+6 Clay Codes) |
+| Payments | Aptos Move — type-safe, formally verified |
+
+## License
+
+[MIT](LICENSE)
 
 ---
 
-Built on Aptos & Shelby Protocol.
+Built on [Aptos](https://aptos.dev) & [Shelby Protocol](https://shelby.xyz)

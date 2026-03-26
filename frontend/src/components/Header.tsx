@@ -45,6 +45,9 @@ export default function Header() {
             >
                 <TerminalIcon size={28} className="group-hover:rotate-12 transition-transform" />
                 <h1 className="ml-4 text-xl md:text-2xl font-bold tracking-tight uppercase hidden sm:block">WritePay</h1>
+                <span className="ml-3 px-2 py-0.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase bg-[#00ffff]/10 text-[#00ffff] border border-[#00ffff]/30 rounded-full">
+                    Testnet
+                </span>
             </div>
 
             {/* Desktop Navigation */}

@@ -23,25 +23,26 @@ Every article is encrypted with AES-256-GCM, stored on [Shelby Protocol](https:/
 ┌──────────────────────────────────────────────────────────────────────┐
 │                       WRITEPAY DATA FLOW                             │
 │                                                                      │
-│   1. PUBLISH              2. DISCOVER             3. READ            │
+│   1. MODERATE (AI)        2. PUBLISH              3. READ            │
 │   ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐│
-│   │ Write article   │     │ Browse the      │     │ Pay on-chain    ││
-│   │ in rich editor  │──▶  │ discovery feed  │──▶  │ (one click)     ││
-│   │                 │     │                 │     │                 ││
-│   │ + AES-256-GCM   │     │ + See title,    │     │ + 90% → Author  ││
-│   │   encryption    │     │   excerpt, price│     │ + 10% → Network ││
-│   │ + Upload to     │     │ + Follow authors│     │ + Decrypt key   ││
-│   │   Shelby        │     │ + Social graph  │     │   released      ││
-│   │ + Register on   │     │                 │     │ + Read in       ││
-│   │   Aptos         │     │                 │     │   browser       ││
+│   │ Writer submits  │     │ Encrypt via KMS │     │ Pay on Aptos    ││
+│   │ article        ───▶   │ + Upload to     │──▶  │ (one click)     ││
+│   │                 │     │   Shelby        │     │                 ││
+│   │ + GenLayer AI   │     │ + Register on   │     │ + 90% → Author  ││
+│   │   validators    │     │   Aptos chain   │     │ + 10% → Network ││
+│   │   approve safe  │     │                 │     │ + Decrypt key   ││
+│   │   content       │     │                 │     │   released      ││
 │   └─────────────────┘     └─────────────────┘     └─────────────────┘│
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Core Features
 
+### 🤖 AI Moderation — GenLayer Intelligent Contracts
+Before publishing, all content is routed through the **GenLayer network**. Decentralized AI validators reach consensus on the content's safety based on platform guidelines. Inappropriate content (hate speech, spam, violence) is automatically blocked before it ever touches the blockchain.
+
 ### 📖 Publish — Encrypted Content Storage
-Write articles in a rich text editor. Content is encrypted client-side with AES-256-GCM and uploaded to Shelby Protocol. Metadata (title, excerpt, price) is registered on-chain.
+Write articles in a rich text editor. After passing AI moderation, content is encrypted client-side with AES-256-GCM and uploaded to Shelby Protocol. Metadata (title, excerpt, price) is registered on-chain.
 
 ### 💰 Commerce — Direct On-Chain Payments
 Readers pay the exact price set by the author. The Aptos smart contract enforces a 90/10 split — 90% to the creator, 10% network maintenance fee. No intermediaries.
@@ -63,6 +64,7 @@ writepay/
 │   ├── src/
 │   │   ├── app/                 # Pages + API routes
 │   │   │   ├── api/encryption/  # KMS — key generation & decryption
+│   │   │   ├── api/moderate/    # GenLayer AI Moderation bridge
 │   │   │   ├── read/            # Reader discovery feed
 │   │   │   ├── write/           # Writer dashboard
 │   │   │   └── profile/         # User profile & settings
@@ -75,9 +77,13 @@ writepay/
 │   │       └── shelby.ts        # Shelby SDK — upload, download blobs
 │   └── .env.example             # Environment template
 │
-└── contracts/
-    └── sources/
-        └── writepay.move        # Aptos Move smart contract
+├── contracts/
+│   └── sources/
+│       └── writepay.move        # Aptos Move smart contract
+│
+└── bridge_experiment/           # Decentralized AI Moderation
+    ├── genlayer-contract/       # Intelligent python contract for content safety
+    └── aptos-contract/          # Aptos module to receive AI verdicts
 ```
 
 **Smart Contract Functions:**
@@ -94,6 +100,7 @@ writepay/
 
 - **Frontend**: Next.js 16, React 19, Turbopack, Tailwind CSS 4
 - **Blockchain**: Aptos (Move smart contracts)
+- **AI Moderation**: GenLayer (Decentralized Intelligent Contracts)
 - **Storage**: Shelby Protocol (decentralized high-throughput blob storage)
 - **Encryption**: AES-256-GCM (client-side encrypt, server-side KMS)
 - **Wallet**: Aptos Wallet Adapter (Petra, Martian, etc.)

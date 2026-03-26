@@ -18,6 +18,8 @@ export default function WriterDashboard() {
   const [price, setPrice] = useState('0.05');
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
+  const [moderating, setModerating] = useState(false);
+  const [moderationRejected, setModerationRejected] = useState(false);
 
   const handlePublish = async () => {
     if (!account) {
@@ -30,8 +32,36 @@ export default function WriterDashboard() {
     }
 
     setPublishing(true);
+    setModerationRejected(false);
 
     try {
+      // ── Step 0: GenLayer AI Moderation ──
+      setModerating(true);
+      const articleId = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+      
+      // Send BOTH title and content to be moderated
+      const textToModerate = `Title: ${title}\n\nContent: ${content}`;
+      
+      const moderationRes = await fetch('/api/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId, content: textToModerate }),
+      });
+
+      if (moderationRes.ok) {
+        const moderationResult = await moderationRes.json();
+        console.log("[GenLayer] Moderation result:", moderationResult);
+
+        if (!moderationResult.approved) {
+          setModerationRejected(true);
+          setModerating(false);
+          setPublishing(false);
+          return; // Block the publish
+        }
+      }
+      setModerating(false);
+      // ── End GenLayer Moderation ──
+
       const pathSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const uniqueId = Math.random().toString(36).substring(2, 8);
       const blobName = `${pathSlug}-${uniqueId}.md`;
@@ -124,6 +154,7 @@ export default function WriterDashboard() {
       alert(err instanceof Error ? err.message : "Failed to publish transaction.");
     } finally {
       setPublishing(false);
+      setModerating(false);
     }
   }
 
@@ -180,6 +211,23 @@ export default function WriterDashboard() {
       <main className="flex-1 bg-black">
         <div className="max-w-5xl mx-auto w-full px-6 py-12 flex flex-col gap-12">
           
+          {/* GenLayer AI Moderation Rejection Banner */}
+          {moderationRejected && (
+            <div className="w-full bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="size-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 shrink-0">
+                <span className="text-xl font-bold">✕</span>
+              </div>
+              <div>
+                <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Publishing Blocked</p>
+                <p className="text-red-400/60 text-xs mt-1 font-medium">GenLayer AI validators flagged this content as inappropriate. Please revise your article and try again.</p>
+              </div>
+              <button 
+                onClick={() => setModerationRejected(false)}
+                className="ml-auto text-red-400/40 hover:text-red-400 text-xl transition-colors shrink-0"
+              >✕</button>
+            </div>
+          )}
+
           {/* Clean Action Bar */}
           <div className="w-full bg-white/5 p-8 border border-white/10 rounded-2xl flex flex-col md:flex-row items-center gap-8 text-white backdrop-blur-sm">
             <div className="flex-1 flex flex-col gap-3">
@@ -204,8 +252,10 @@ export default function WriterDashboard() {
                 onClick={handlePublish}
                 className="w-full bg-white text-black font-bold py-6 px-12 text-sm rounded-full hover:bg-[#00ffff] transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-4 disabled:opacity-20 shadow-2xl"
               >
-                {publishing ? (
-                  <Loader2 size={18} className="animate-spin" />
+                {moderating ? (
+                  <><Loader2 size={18} className="animate-spin" /> GenLayer AI Analyzing...</>
+                ) : publishing ? (
+                  <><Loader2 size={18} className="animate-spin" /> Securing...</>
                 ) : (
                   <>Secure Now</>
                 )}

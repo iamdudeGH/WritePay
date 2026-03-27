@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const violations: string[] = [];
 
     // Gibberish length/space checks
-    if (cleanContent.trim().length < 15) {
+    if (cleanContent.trim().length < 50) {
       violations.push("content_too_short_spam");
     }
     if (cleanContent.length > 40 && !cleanContent.includes(' ')) {

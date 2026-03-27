@@ -48,11 +48,15 @@ export async function POST(req: Request) {
 
     const violations: string[] = [];
 
-    // Gibberish length/space checks
-    if (cleanContent.trim().length < 50) {
+    // Gibberish length and real article heuristic checks
+    // Remove the automatically prepended "Title:" and "Content:" strictly for counting
+    const strippedContent = cleanContent.replace(/title:|content:/ig, '').trim();
+    const wordCount = strippedContent.split(/\s+/).filter((w: string) => w.length > 0).length;
+
+    if (wordCount < 20) {
       violations.push("content_too_short_spam");
     }
-    if (cleanContent.length > 40 && !cleanContent.includes(' ')) {
+    if (strippedContent.length > 40 && !strippedContent.includes(' ')) {
       violations.push("gibberish_no_spaces");
     }
 

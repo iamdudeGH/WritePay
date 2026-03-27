@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const GENLAYER_STUDIO_RPC = "https://studio.genlayer.com/api";
-const GENLAYER_CONTRACT_ADDRESS = "0xe7988Bd6E1c61b5cEA057Ea51a3B9DD52f473D6f";
+const GENLAYER_CONTRACT_ADDRESS = "0x09acC33C9D3498E1831F278bB1e078730471526E";
 
 /**
  * Moderation API that sends content to GenLayer Studio for AI consensus.
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       if (response.ok) {
         const result = await response.json();
         console.log("[GenLayer] RPC result:", JSON.stringify(result));
-        
+
         if (!result.error) {
           // The GenLayer contract returns true/false
           const isApproved = result.result === true || result.result?.data?.result === true;
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         }
       }
     } catch (glError) {
-      console.log("[GenLayer] Studio RPC unavailable, falling back to local moderation:", 
+      console.log("[GenLayer] Studio RPC unavailable, falling back to local moderation:",
         glError instanceof Error ? glError.message : "Unknown error");
     }
 
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     ];
 
     const violations: string[] = [];
-    
+
     // Gibberish length/space checks
     if (cleanContent.trim().length < 15) {
       violations.push("content_too_short_spam");
@@ -116,8 +116,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       approved: isApproved,
-      reason: isApproved 
-        ? "Content passed moderation review" 
+      reason: isApproved
+        ? "Content passed moderation review"
         : "Content flagged as low-quality spam or inappropriate",
       source: "local_filter",
       violations: violations.length,

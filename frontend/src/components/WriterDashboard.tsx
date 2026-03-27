@@ -20,6 +20,7 @@ export default function WriterDashboard() {
   const [published, setPublished] = useState(false);
   const [moderating, setModerating] = useState(false);
   const [moderationRejected, setModerationRejected] = useState(false);
+  const [moderationReason, setModerationReason] = useState('');
 
   const handlePublish = async () => {
     if (!account) {
@@ -33,6 +34,7 @@ export default function WriterDashboard() {
 
     setPublishing(true);
     setModerationRejected(false);
+    setModerationReason('');
 
     try {
       // ── Step 0: GenLayer AI Moderation ──
@@ -54,6 +56,7 @@ export default function WriterDashboard() {
 
         if (!moderationResult.approved) {
           setModerationRejected(true);
+          setModerationReason(moderationResult.reason || "Content flagged by GenLayer AI.");
           setModerating(false);
           setPublishing(false);
           return; // Block the publish
@@ -213,18 +216,29 @@ export default function WriterDashboard() {
           
           {/* GenLayer AI Moderation Rejection Banner */}
           {moderationRejected && (
-            <div className="w-full bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="size-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 shrink-0">
-                <span className="text-xl font-bold">✕</span>
+            <div className="w-full bg-[#1a0505] border border-[#ff3333]/40 shadow-[0_0_30px_rgba(255,51,51,0.15)] rounded-2xl p-6 md:p-8 flex items-start md:items-center gap-5 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+              {/* Glowing accent border */}
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#ff3333] shadow-[0_0_15px_#ff3333]"></div>
+              
+              <div className="size-12 md:size-14 bg-[#ff3333]/10 border border-[#ff3333]/20 rounded-xl flex items-center justify-center text-[#ff3333] shrink-0 transform transition-transform hover:scale-105">
+                <span className="text-2xl font-black">✕</span>
               </div>
-              <div>
-                <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Publishing Blocked</p>
-                <p className="text-red-400/60 text-xs mt-1 font-medium">GenLayer AI validators flagged this content as inappropriate. Please revise your article and try again.</p>
+              
+              <div className="flex-1">
+                <p className="text-[#ff3333] font-black text-sm md:text-base uppercase tracking-[0.2em] mb-1.5 shadow-[#ff3333]/50">
+                  Publishing Blocked
+                </p>
+                <p className="text-white/90 text-sm md:text-base font-medium leading-relaxed">
+                  {moderationReason}
+                </p>
               </div>
+              
               <button 
                 onClick={() => setModerationRejected(false)}
-                className="ml-auto text-red-400/40 hover:text-red-400 text-xl transition-colors shrink-0"
-              >✕</button>
+                className="text-white/30 hover:text-white bg-white/5 hover:bg-white/10 size-8 rounded-full flex items-center justify-center text-lg transition-all shrink-0"
+              >
+                ✕
+              </button>
             </div>
           )}
 

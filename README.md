@@ -38,8 +38,10 @@ Every article is encrypted with AES-256-GCM, stored on [Shelby Protocol](https:/
 
 ## Core Features
 
-### 🤖 AI Moderation — GenLayer Intelligent Contracts
-Before publishing, all content is routed through the **GenLayer network**. Decentralized AI validators reach consensus on the content's safety based on platform guidelines. Inappropriate content (hate speech, spam, violence) is automatically blocked before it ever touches the blockchain.
+### 🤖 AI Moderation & Quality Filter — GenLayer Intelligent Contracts
+Before an article can be encrypted and anchored to the blockchain, it goes through a strict two-layer moderation bridge:
+1. **Local Heuristic Filter:** The Next.js API aggressively blocks low-effort spam, repetitive keyboard mashing, and extremely short test strings (< 20 words) instantly.
+2. **GenLayer AI Consensus:** If it passes the heuristic checks, the text is routed to the **GenLayer network**. Decentralized AI validators analyze the text and reach consensus on the content's safety and quality. Inappropriate content (hate speech, violence) or purely promotional spam is autonomously blocked before it ever touches the Aptos blockchain.
 
 ### 📖 Publish — Encrypted Content Storage
 Write articles in a rich text editor. After passing AI moderation, content is encrypted client-side with AES-256-GCM and uploaded to Shelby Protocol. Metadata (title, excerpt, price) is registered on-chain.

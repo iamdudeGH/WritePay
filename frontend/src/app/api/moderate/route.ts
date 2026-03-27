@@ -25,57 +25,9 @@ export async function POST(req: Request) {
     // Strip HTML tags to get clean text for moderation
     const cleanContent = content.replace(/<[^>]*>?/gm, '').substring(0, 2000).toLowerCase();
 
-    // ── Attempt 1: Call GenLayer Studio RPC ──
-    try {
-      // GenLayer Studio uses "send_transaction" for write calls
-      const rpcPayload = {
-        jsonrpc: "2.0",
-        method: "send_transaction",
-        params: [{
-          to_address: GENLAYER_CONTRACT_ADDRESS,
-          function_name: "moderate_article",
-          function_args: JSON.stringify([articleId, cleanContent]),
-          value: 0,
-        }],
-        id: 1,
-      };
-
-      console.log("[GenLayer] Attempting GenLayer Studio RPC...");
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
-
-      const response = await fetch(GENLAYER_STUDIO_RPC, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(rpcPayload),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log("[GenLayer] RPC result:", JSON.stringify(result));
-
-        if (!result.error) {
-          // The GenLayer contract returns true/false
-          const isApproved = result.result === true || result.result?.data?.result === true;
-          return NextResponse.json({
-            approved: isApproved,
-            reason: isApproved ? "Content passed GenLayer AI moderation" : "Content flagged by GenLayer AI validators",
-            source: "genlayer"
-          });
-        }
-      }
-    } catch (glError) {
-      console.log("[GenLayer] Studio RPC unavailable, falling back to local moderation:",
-        glError instanceof Error ? glError.message : "Unknown error");
-    }
-
-    // ── Fallback: Local AI-style Keyword Moderation ──
-    // This simulates what the GenLayer contract does, for when Studio is not running
-    console.log("[Moderation] Using local content filter as fallback...");
-
+    // ── Layer 1: Fast Local Heuristic Filter ──
+    // Block obvious spam, gibberish, and hard violations before wasting an AI RPC call
+    console.log("[Moderation] Running local heuristic checks...");
     const violationPatterns = [
       // Hate speech
       /\b(hate|racist|sexist|bigot|slur)\b/i,
@@ -110,17 +62,68 @@ export async function POST(req: Request) {
       }
     }
 
-    const isApproved = violations.length === 0;
+    if (violations.length > 0) {
+      console.log(`[Moderation] Rejected by local filter (${violations.length} violations)`);
+      return NextResponse.json({
+        approved: false,
+        reason: "Content flagged as low-quality spam or inappropriate",
+        source: "local_filter",
+        violations: violations.length,
+      });
+    }
 
-    console.log(`[Moderation] Result: ${isApproved ? "APPROVED" : "REJECTED"} (${violations.length} violations)`);
+    // ── Layer 2: Call GenLayer Studio RPC for AI Consensus ──
+    try {
+      const rpcPayload = {
+        jsonrpc: "2.0",
+        method: "send_transaction",
+        params: [{
+          to_address: GENLAYER_CONTRACT_ADDRESS,
+          function_name: "moderate_article",
+          function_args: JSON.stringify([articleId, cleanContent]),
+          value: 0,
+        }],
+        id: 1,
+      };
 
+      console.log("[GenLayer] Local heuristics passed. Attempting GenLayer Studio AI Consensus...");
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+      const response = await fetch(GENLAYER_STUDIO_RPC, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rpcPayload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("[GenLayer] RPC result:", JSON.stringify(result));
+
+        if (!result.error) {
+          const isApproved = result.result === true || result.result?.data?.result === true;
+          return NextResponse.json({
+            approved: isApproved,
+            reason: isApproved ? "Content passed GenLayer AI moderation" : "Content flagged by GenLayer AI validators",
+            source: "genlayer"
+          });
+        }
+      }
+    } catch (glError) {
+      console.log("[GenLayer] Studio RPC unavailable, using successful local moderation:",
+        glError instanceof Error ? glError.message : "Unknown error");
+    }
+
+    // ── Fallback Success ──
+    // If GenLayer failed to connect, but the content passed local heuristics, we fail-open.
     return NextResponse.json({
-      approved: isApproved,
-      reason: isApproved
-        ? "Content passed moderation review"
-        : "Content flagged as low-quality spam or inappropriate",
+      approved: true,
+      reason: "Content passed local heuristic review (GenLayer AI offline)",
       source: "local_filter",
-      violations: violations.length,
+      violations: 0,
     });
 
   } catch (error) {

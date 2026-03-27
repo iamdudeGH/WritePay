@@ -82,16 +82,28 @@ export async function POST(req: Request) {
       /\b(kill|murder|die|death\s+to)\b/i,
       // Extreme violence  
       /\b(bomb|terror|attack|shoot|weapon)\b/i,
-      // Spam patterns
+      // Commercial Spam patterns
       /\b(buy now|click here|free money|get rich quick)\b/i,
       /\b(casino|gambling|porn|xxx|nude)\b/i,
       // Profanity
       /\b(fuck|shit|ass|bitch|damn|crap)\b/i,
       // Scam patterns
       /\b(nigerian prince|wire transfer|social security)\b/i,
+      // Gibberish & Keyboard mashing
+      /(.)\1{5,}/i, // 6 or more repeated characters like aaaaaa
+      /\b(asdf|qwerty|12345|test test)\b/i,
     ];
 
     const violations: string[] = [];
+    
+    // Gibberish length/space checks
+    if (cleanContent.trim().length < 15) {
+      violations.push("content_too_short_spam");
+    }
+    if (cleanContent.length > 40 && !cleanContent.includes(' ')) {
+      violations.push("gibberish_no_spaces");
+    }
+
     for (const pattern of violationPatterns) {
       if (pattern.test(cleanContent)) {
         violations.push(pattern.source);
@@ -106,7 +118,7 @@ export async function POST(req: Request) {
       approved: isApproved,
       reason: isApproved 
         ? "Content passed moderation review" 
-        : "Content flagged for inappropriate language or harmful content",
+        : "Content flagged as low-quality spam or inappropriate",
       source: "local_filter",
       violations: violations.length,
     });
